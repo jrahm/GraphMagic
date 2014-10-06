@@ -8,6 +8,7 @@ import Data.List
 import Data.Ord
 import Control.DeepSeq
 import Control.Monad
+import qualified Data.List.Stream as S
 
 import Debug.Trace
 import Control.Parallel.Strategies
@@ -47,12 +48,16 @@ modularity grph =
         -- Number of edges. I'm bummed the graph library does not have this
         noEdg = (length . edges) grph
         -- Number of edges inside a group normalized
-        edgesInside  grp = length [ edg | edg@(n1, n2) <- edges grph, (grp ==? lab grph n1) && (grp ==? lab grph n2)] /! noEdg
+        edgesInside grp = 
+            S.foldl' (\x (n1,n2) ->
+                if (grp ==? lab grph n1) &&
+                   (grp ==? lab grph n2) then x+1 else x) 0 (edges grph) /! noEdg
         -- Number of edges not inside, but associated with a group normalized
-        edgesOutside  grp = length [ edg | edg@(n1, n2) <- edges grph,
-            (grp ==? lab grph n1) && not (grp ==? lab grph n2) ||
-            not (grp ==? lab grph n1) && (grp ==? lab grph n2)
-            ] /! (2 * noEdg)
+        edgesOutside grp = 
+            S.foldl' (\x (n1,n2) ->
+                let ln1 = lab grph n1
+                    ln2 = lab grph n2 in
+                    if grp ==? ln1 && not (grp ==? ln2) then (x+1) else x) 0 (edges grph)  /! noEdg
         -- The inside of the sum term for modularity
         f g = let inside = edgesInside g
                   outside = edgesOutside g
