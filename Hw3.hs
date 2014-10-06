@@ -50,17 +50,22 @@ modularity grph =
         -- Number of edges inside a group normalized
         edgesInside grp = 
             S.foldl' (\x (n1,n2) ->
-                if (grp ==? lab grph n1) &&
-                   (grp ==? lab grph n2) then x+1 else x) 0 (edges grph) /! noEdg
+                if (grp ==? lab grph n1) && (grp ==? lab grph n2) then x+1 else x) 0 (edges grph) /! noEdg
         -- Number of edges not inside, but associated with a group normalized
         edgesOutside grp = 
             S.foldl' (\x (n1,n2) ->
                 let ln1 = lab grph n1
                     ln2 = lab grph n2 in
                     if grp ==? ln1 && not (grp ==? ln2) then (x+1) else x) 0 (edges grph)  /! noEdg
+        outIn grp =
+            let (outp,inp) = S.foldl' (\(x,y) (n1,n2) ->
+                 let ln1 = lab grph n1
+                     ln2 = lab grph n2 in
+                    (if grp ==? ln1 && not (grp ==? ln2) then x+1 else x,
+                     if (grp ==? ln1) && (grp ==? ln2) then y+1 else y)) (0,0) (edges grph)
+            in (outp /! noEdg, inp /! noEdg)
         -- The inside of the sum term for modularity
-        f g = let inside = edgesInside g
-                  outside = edgesOutside g
+        f g = let (outside,inside) = outIn g
                   in inside  - (inside + outside)**2
     -- the final sum
     in sum $ map f $ labels grph

@@ -48,12 +48,12 @@ main = do
     BS.writeFile "karate-social.dot" $ renderDotFile karate
 
     {- Just because ... -}
-    printf "Modularity: %s\n" (modularity karate)
+    printf "Modularity: %.3f\n" (modularity karate)
 
     (gr, modular) <- agglomerateA karate $ \g a i -> do
         {- To examine the iteration, we have a monadic function
          - to do it. This is why we need the applicative agglomerate -}
-        printf "%d %f\n" i a
+        printf "%d %.3f\n" i a
 
         {- Render a dot file so we can look back at it -}
         renderDotFile' g ("dots/karate_"++show i++".dot")
